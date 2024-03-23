@@ -1,0 +1,6 @@
+Crawler/chromedriver.exe
+Crawler/pexels.py
+Crawler/LICENSE.chromedriver
+
+FaceDetector/data/*
+FaceDetector/static/*
