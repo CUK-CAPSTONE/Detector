@@ -4,6 +4,7 @@ import torch
 from torchvision import datasets, models, transforms
 import os
 import io
+import datetime
 
 from flask import Flask, jsonify, request
 from flask import jsonify
@@ -40,14 +41,11 @@ def get_prediction(image_bytes):
         outputs = torch.exp(outputs)
         topk, topclass = outputs.topk(3, dim=1)
 
-        classes = [class_names[i] for i in topclass.cpu().numpy()[0]]
-        scores = [round(i*100,2) for i in topk.cpu().numpy()[0]]
-
         predictions = {}
 
         for i in range(3):
-            predictions[class_names[topclass.cpu().numpy()[0][i]]] = topk.cpu().numpy()[0][i]
-        print(classes, scores)
+            predictions[class_names[topclass.cpu().numpy()[0][i]]] = float(topk.cpu().numpy()[0][i])
+
     return predictions
 
 @app.route('/image', methods=['POST'])
@@ -59,9 +57,16 @@ def upload_image_file():
 
     image_bytes = file.read()
     image = Image.open(io.BytesIO(image_bytes))
-    image.save("./static/img.jpg","jpeg")
+    if image.mode == 'RGBA':
+        image = image.convert('RGB')
+    buffer = io.BytesIO()
+    image.save(buffer, format="JPEG")
+    jpeg_image_bytes = buffer.getvalue()
 
-    result = get_prediction(image_bytes=image_bytes)
+    timestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
+    filename = f"./history/{timestamp}.png"
+
+    result = get_prediction(image_bytes=jpeg_image_bytes)
     return jsonify(result)
 
 if __name__ == "__main__":
