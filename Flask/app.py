@@ -5,6 +5,7 @@ from torchvision import datasets, models, transforms
 import os
 import io
 import datetime
+import requests
 
 from flask import Flask, jsonify, request
 from flask import jsonify
@@ -50,23 +51,26 @@ def get_prediction(image_bytes):
 
 @app.route('/image', methods=['POST'])
 def upload_image_file():
-    if 'image' not in request.files:
-        return jsonify({'error': 'No file provided.'}), 400
+    data = request.json
+    if 'image_url' not in data:
+        return jsonify({'error': 'No image URL provided.'}), 400
 
-    file = request.files['image']
+    image_url = data['image_url']
+    response = requests.get(image_url)
 
-    image_bytes = file.read()
+    if response.status_code != 200:
+        return jsonify({'error': 'Failed to fetch image from URL.'}), 500
+
+    image_bytes = response.content
     image = Image.open(io.BytesIO(image_bytes))
     if image.mode == 'RGBA':
         image = image.convert('RGB')
-    buffer = io.BytesIO()
-    image.save(buffer, format="JPEG")
-    jpeg_image_bytes = buffer.getvalue()
 
     timestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
     filename = f"./history/{timestamp}.png"
+    image.save(filename, "JPEG")
 
-    result = get_prediction(image_bytes=jpeg_image_bytes)
+    result = get_prediction(image_bytes=image_bytes)
     return jsonify(result)
 
 if __name__ == "__main__":
