@@ -65,9 +65,12 @@ def upload_image_file():
     image = Image.open(io.BytesIO(image_bytes))
     if image.mode == 'RGBA':
         image = image.convert('RGB')
+    history_dir = "./history"
+    if not os.path.exists(history_dir):
+        os.makedirs(history_dir)
 
     timestamp = datetime.datetime.now().strftime('%Y%m%d%H%M%S%f')
-    filename = f"./history/{timestamp}.png"
+    filename = f"{history_dir}/{timestamp}.jpeg"
     image.save(filename, "JPEG")
 
     result = get_prediction(image_bytes=image_bytes)
