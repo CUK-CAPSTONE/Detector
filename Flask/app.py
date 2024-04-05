@@ -27,8 +27,11 @@ transforms_test = transforms.Compose([
     ])
 
 data_dir = '../FaceDetector/data'
-train_datasets = datasets.ImageFolder(os.path.join(data_dir,'train'), transforms_train)
-class_names = train_datasets.classes
+class_names = ['bear', 'cat', 'deer', 'dog', 'fox', 'rabbit']
+# train_datasets = datasets.ImageFolder(os.path.join(data_dir,'train'), transforms_train)
+# class_names = train_datasets.classes
+
+
 
 model = torch.load("./weight/model_best_epoch.pt", map_location=torch.device('cpu'))
 
